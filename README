@@ -1,0 +1,108 @@
+gpx2googlemaps - GPX to Google Maps converter
+Copyright (C) Tom Payne  2009
+
+
+INTRODUCTION
+
+gpx2googlemaps is designed for making turnpoint maps for paragliding and hang
+gliding competitions.  It reads a GPX file as input and generates a turnpoint
+map using map tiles from Google Maps.
+
+
+REQUIREMENTS
+
+gpx2googlemaps requires:
+* pycairo http://www.cairographics.org/pycairo/
+* ImageMagick http://www.imagemagick.org/
+
+On Ubuntu systems the packages are called python-cairo and imagemagick
+respectively.
+	$ sudo apt-get install python-cairo imagemagick
+
+
+QUICK START
+
+Given one or more GPX files containing waypoints, gpx2googlemaps will produce
+a waypoint map called map.png.  For example:
+	./gpx2googlemaps frutigen.gpx
+This can take a long time the first time that you run the command since
+gpx2googlemaps must download all the map tiles from Google.  These map tiles
+are cached in a temporary directory (/tmp/gpx2googlemaps by default).
+
+
+DEALING WITH NON-GPX FORMATS
+
+The input file must be in GPX format.  If you have a .WPT file it is typically
+in either OziExplorer or CompeGPS format and you can use GPSBabel
+(http://www.gpsbabel.org) to convert it, for example:
+	$ gpsbabel -i compegps -f filename.wpt -o gpx -F filename.gpx
+or
+	$ gpsbabel -i ozi -f filename.wpt -o gpx -F filename.gpx
+
+
+SPECIFYING THE ZOOM LEVEL
+
+You can increase the zoom level with the --zoom option, for example:
+	$ ./gpx2googlemaps --zoom=12 frutigen.gpx
+Higher zoom levels generate larger maps with more detail which may or may not
+be desirable.  Depending on the size of your flying area, zoom levels 11 to
+13 usually give the best compromise between detail and size.
+
+
+TRUNCATING WAYPOINT NAMES
+
+Waypoint names can be very long and in paragliding competitions we tend to
+only use the first three characters.  You can tell gpx2googlemaps to truncate
+the waypoint names using the --truncate option, for example:
+	$ ./gpx2googlemaps --truncate=3 frutigen.gpx
+
+
+LIMITING THE AREA COVERED BY THE MAP
+
+By default, gpx2googlemaps will make the map large enough to include all the
+waypoints in the input file.  If you have a number of distant waypoints (e.g.
+remote goals) then you may wish to limit the map to a certain area.  You can
+do this with the --bounds option, for example:
+	$ ./gpx2googlemaps --bounds=F05,F07,F21,F22 frutigen.gpx
+This will ensure that all the map covers all the waypoints specified.
+
+You can also specify coordinates explicitly as latitude:longitude pairs, for
+example:
+	$ ./gpx2googlemaps --bounds=46.5:7.5,46.7:7.7 frutigen.gpx
+
+
+GENERATING A MAP WITHOUT WAYPOINTS
+
+You can generate a map without any waypoints using the --bounds option on its
+own, for example:
+	$ ./gpx2googlemaps --bounds=46.5:7.5,46.7:7.7
+
+
+CHANGING THE OUTPUT FILE NAME
+
+The default output filename is map.png, this can be overridden with the
+--output option, for example:
+	$ ./gpx2googlemaps --output=frutigen.png frutigen.gpx
+
+
+KNOWN BUGS
+
+If two waypoints are close together then their labels can overlap.
+
+
+LICENSE
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# vim: set spell spelllang=en textwidth=78:
