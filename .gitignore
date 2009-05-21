@@ -1,2 +1,5 @@
 .*.sw*
+*.gpx
+*.png
 *.pyc
+*.wpt
