@@ -1,0 +1,254 @@
+#!/usr/bin/python
+#
+#   GPX to Google Maps converter
+#   Copyright (C) 2009  Tom Payne
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import with_statement
+
+from hashlib import md5
+from logging import error
+from math import pi
+import optparse
+import os
+import os.path
+import re
+import subprocess
+import sys
+from tempfile import gettempdir
+from urllib2 import urlopen
+try:
+    from xml.etree.cElementTree import ElementTree, parse
+except ImportError:
+    from xml.etree.ElementTree import ElementTree, parse
+
+import cairo
+import globalmaptiles
+
+
+PROJECTION = globalmaptiles.GlobalMercator()
+
+
+class Coord(object):
+
+    def __init__(self, lat, lon):
+        self.lat = lat
+        self.lon = lon
+
+    def __repr__(self):
+        return '%s(%s, %s)' % (self.__class__.__name__, repr(self.lat), repr(self.lon))
+
+
+class Waypoint(Coord):
+
+    def __init__(self, name, lat, lon):
+        Coord.__init__(self, lat, lon)
+        self.name = name
+
+    def draw(self, ctx, map):
+        ctx.save()
+        px, py = map.project(self)
+        ctx.translate(px, py)
+        ctx.arc(0.0, 0.0, 3.0, 0.0, 2.0 * pi)
+        ctx.set_source_rgb(1.0, 1.0, 0.0)
+        ctx.fill_preserve()
+        ctx.set_line_width(1.0)
+        ctx.set_source_rgb(0.0, 0.0, 0.0)
+        ctx.stroke()
+        ctx.restore()
+
+    def draw_label(self, ctx, map, truncate):
+        ctx.save()
+        px, py = map.project(self)
+        ctx.translate(px, py)
+        ctx.select_font_face('Sans', cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        ctx.set_font_size(10.0)
+        ctx.move_to(4.0, 0.0)
+        if truncate:
+            label = self.name[:truncate]
+        else:
+            label = self.name
+        ctx.text_path(label)
+        ctx.set_source_rgba(1.0, 1.0, 1.0, 0.75)
+        ctx.set_line_width(1.5)
+        ctx.stroke_preserve()
+        ctx.set_source_rgb(0.0, 0.0, 0.0)
+        ctx.set_line_width(1.0)
+        ctx.fill()
+        ctx.restore()
+
+    @classmethod
+    def from_element(cls, namespace, wpt_element):
+        name = wpt_element.findtext('{%s}name' % namespace).encode('utf_8')
+        lat = float(wpt_element.get('lat'))
+        lon = float(wpt_element.get('lon'))
+        return cls(name, lat, lon)
+
+
+class Tile(object):
+
+    def __init__(self, v, tx, ty, zoom):
+        self.v = v
+        self.tx = tx
+        self.ty = ty
+        self.zoom = zoom
+
+    def __repr__(self):
+        return '%s(%s, %s, %s, %s)' % (self.__class__.__name__, repr(self.v), repr(self.tx), repr(self.ty), repr(self.zoom))
+
+    def url(self):
+        gtx, gty = PROJECTION.GoogleTile(self.tx, self.ty, self.zoom)
+        return 'http://mt0.google.com/mt/v=%s&hl=en&x=%d&y=%d&z=%d&s=' % (self.v, gtx, gty, self.zoom)
+
+    def bounds(self):
+        minLat, minLon, maxLat, maxLon = PROJECTION.TileLatLonBounds(self.tx, self.ty, self.zoom)
+        return (Coord(minLat, minLon), Coord(maxLat, maxLon))
+
+    def east(self):
+        return self.__class__(self.v, self.tx + 1, self.ty, self.zoom)
+
+    def north(self):
+        return self.__class__(self.v, self.tx, self.ty + 1, self.zoom)
+
+
+class Map(object):
+
+    def __init__(self, v, bounds, zoom, border=0):
+        self.v = v
+        self.bounds = bounds
+        self.zoom = zoom
+        mx, my = PROJECTION.LatLonToMeters(bounds[0].lat, bounds[0].lon)
+        tx, ty = PROJECTION.MetersToTile(mx, my, self.zoom)
+        border_tiles = (border + 255) / 256
+        tile0 = Tile(self.v, tx - border_tiles, ty - border_tiles, self.zoom)
+        self.tiles = [[tile0]]
+        extra_rows = border_tiles
+        while True:
+            while self.tiles[-1][-1].bounds()[1].lon < bounds[1].lon:
+                self.tiles[-1].append(self.tiles[-1][-1].east())
+            for i in xrange(0, border_tiles):
+                self.tiles[-1].append(self.tiles[-1][-1].east())
+            if self.tiles[-1][-1].bounds()[1].lat < bounds[1].lat:
+                self.tiles.append([self.tiles[-1][0].north()])
+            elif extra_rows > 0:
+                self.tiles.append([self.tiles[-1][0].north()])
+                extra_rows -= 1
+            else:
+                break
+        minx, miny, maxx, maxy = PROJECTION.TileBounds(tile0.tx, tile0.ty, tile0.zoom)
+        self.px0, self.py0 = PROJECTION.MetersToPixels(minx, miny, self.zoom)
+
+    def surface(self, filename_for_url):
+        result = cairo.ImageSurface(cairo.FORMAT_ARGB32, 256 * len(self.tiles[0]), 256 * len(self.tiles))
+        ctx = cairo.Context(result)
+        for j, row in enumerate(self.tiles):
+            for i, tile in enumerate(row):
+                ctx.save()
+                ctx.translate(256 * i, 256 * (len(self.tiles) - j - 1))
+                ctx.set_source(cairo.SurfacePattern(cairo.ImageSurface.create_from_png(filename_for_url(tile.url()))))
+                ctx.paint()
+                ctx.restore()
+        return result
+
+    def project(self, coord):
+        mx, my = PROJECTION.LatLonToMeters(coord.lat, coord.lon)
+        px, py = PROJECTION.MetersToPixels(mx, my, self.zoom)
+        height = 256 * len(self.tiles)
+        return (px - self.px0, height - py + self.py0)
+
+    def crop(self, surface, border):
+        x0, y0 = self.project(self.bounds[0])
+        x1, y1 = self.project(self.bounds[1])
+        minx = int(round(x0)) - border
+        miny = int(round(y1)) - border
+        maxx = int(round(x1)) + border
+        maxy = int(round(y0)) + border
+        result = cairo.ImageSurface(cairo.FORMAT_ARGB32, maxx - minx, maxy - miny)
+        ctx = cairo.Context(result)
+        ctx.translate(-minx, -miny)
+        ctx.set_source(cairo.SurfacePattern(surface))
+        ctx.paint()
+        return result
+
+
+class URLCache(object):
+
+    def __init__(self, cachedir):
+        self.cachedir = cachedir
+
+    def filename_for_url(self, url):
+        key = md5(url).hexdigest()
+        filename = os.path.join(self.cachedir, key)
+        if not os.path.exists(filename + '.jpg'):
+            content = urlopen(url).read()
+            if not os.path.isdir(self.cachedir):
+                os.makedirs(self.cachedir)
+            with open(filename + '.jpg', 'w') as file:
+                file.write(content)
+        if not os.path.exists(filename + '.png'):
+            subprocess.call(['convert', filename + '.jpg', filename + '.png'])
+        return filename + '.png'
+
+
+def main(argv):
+    parser = optparse.OptionParser(usage='Usage: %prog [options] filename', description='GPX to Google Maps converter')
+    parser.add_option('-o', '--output', metavar='FILENAME', help='set output filename')
+    parser.add_option('-z', '--zoom', metavar='VALUE', type='int', help='set the zoom level')
+    parser.add_option('-b', '--border', metavar='N', type='int', help='include a border of N pixels')
+    parser.add_option('-B', '--bounds', metavar='LIST', help='specify a list of waypoints or coordinates that must be on the map')
+    parser.add_option('--truncate', metavar='N', type='int', help='truncate waypoint names to N characters')
+    parser.add_option('--cache-dir', metavar='PATH')
+    parser.set_defaults(output='map.png')
+    parser.set_defaults(zoom=11)
+    parser.set_defaults(border=64)
+    parser.set_defaults(cache_dir=os.path.join(gettempdir(), 'gpx2googlemaps'))
+    options, args = parser.parse_args(argv)
+    waypoints = []
+    for arg in args[1:]:
+        gpx_element = parse(open(arg))
+        namespace = re.match(r'\{(.*)\}', gpx_element.getroot().tag).group(1)
+        for wpt_element in gpx_element.findall('/{%s}wpt' % namespace):
+            waypoints.append(Waypoint.from_element(namespace, wpt_element))
+    if options.bounds:
+        boundary_coords = []
+        for bound in options.bounds.split(','):
+            m = re.match(r'\A(-?\d+(?:\.\d*)):(-?\d+(?:\.\d*)?)\Z', bound)
+            if m:
+                boundary_coords.append(Coord(float(m.group(1)), float(m.group(2))))
+            else:
+                for waypoint in waypoints:
+                    if waypoint.name.startswith(bound):
+                        boundary_coords.append(waypoint)
+    else:
+        boundary_coords = waypoints
+    if not boundary_coords:
+        error("No waypoints and no bounds specified")
+        sys.exit(1)
+    lats = [coord.lat for coord in boundary_coords]
+    lons = [coord.lon for coord in boundary_coords]
+    bounds = (Coord(min(lats), min(lons)), Coord(max(lats), max(lons)))
+    map = Map('w2p.87', bounds, options.zoom, options.border)
+    url_cache = URLCache(options.cache_dir)
+    surface = map.surface(filename_for_url=url_cache.filename_for_url)
+    ctx = cairo.Context(surface)
+    for waypoint in waypoints:
+        waypoint.draw(ctx, map)
+    for waypoint in waypoints:
+        waypoint.draw_label(ctx, map, options.truncate)
+    map.crop(surface, options.border).write_to_png(options.output)
+
+
+if __name__ == '__main__':
+    main(sys.argv)
