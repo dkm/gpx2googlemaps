@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx
+  version="1.0"
+  creator="GPSBabel - http://www.gpsbabel.org"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://www.topografix.com/GPX/1/0"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
+<time>2009-05-21T15:25:06Z</time>
+<bounds minlat="46.458057088" minlon="7.475094647" maxlat="46.636953331" maxlon="7.696838612"/>
+<wpt lat="46.636953331" lon="7.648899552">
+  <ele>1810.000000</ele>
+  <name>F02181</name>
+  <cmt>Oberniesen</cmt>
+  <desc>Oberniesen</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.622982977" lon="7.663207435">
+  <ele>1510.000000</ele>
+  <name>F03151</name>
+  <cmt>Hubelweid</cmt>
+  <desc>Hubelweid</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.607318564" lon="7.619285899">
+  <ele>1920.000000</ele>
+  <name>F04192</name>
+  <cmt>Gunggstand</cmt>
+  <desc>Gunggstand</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.599549796" lon="7.638836128">
+  <ele>1440.000000</ele>
+  <name>F05144</name>
+  <cmt>Ueblenberg</cmt>
+  <desc>Ueblenberg</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.585291002" lon="7.611775727">
+  <ele>1800.000000</ele>
+  <name>F06180</name>
+  <cmt>Mäggisseren</cmt>
+  <desc>Mäggisseren</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.541259358" lon="7.577479589">
+  <ele>1650.000000</ele>
+  <name>F07165</name>
+  <cmt>Alpi</cmt>
+  <desc>Alpi</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.497669757" lon="7.540244097">
+  <ele>2020.000000</ele>
+  <name>F08202</name>
+  <cmt>Tschenten</cmt>
+  <desc>Tschenten</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.471599973" lon="7.518061899">
+  <ele>1980.000000</ele>
+  <name>F09198</name>
+  <cmt>Sillerenbühl</cmt>
+  <desc>Sillerenbühl</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.468922873" lon="7.475094647">
+  <ele>1820.000000</ele>
+  <name>F10182</name>
+  <cmt>Und. Seewle</cmt>
+  <desc>Und. Seewle</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.522304540" lon="7.622782892">
+  <ele>1800.000000</ele>
+  <name>F12180</name>
+  <cmt>Elsigenalp</cmt>
+  <desc>Elsigenalp</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.563019579" lon="7.643396606">
+  <ele>1280.000000</ele>
+  <name>F13128</name>
+  <cmt>Truten</cmt>
+  <desc>Truten</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.501920729" lon="7.696838612">
+  <ele>1680.000000</ele>
+  <name>F20168</name>
+  <cmt>Oeschinen</cmt>
+  <desc>Oeschinen</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.538813315" lon="7.692190693">
+  <ele>1950.000000</ele>
+  <name>F21195</name>
+  <cmt>Giesenen</cmt>
+  <desc>Giesenen</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.553315785" lon="7.683261117">
+  <ele>1640.000000</ele>
+  <name>F22164</name>
+  <cmt>Grimer</cmt>
+  <desc>Grimer</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.587544199" lon="7.608912389">
+  <ele>1850.000000</ele>
+  <name>F80185</name>
+  <cmt>Mäggisseren</cmt>
+  <desc>Mäggisseren</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.585669153" lon="7.653919903">
+  <ele>780.000000</ele>
+  <name>F90078</name>
+  <cmt>Flugplatz</cmt>
+  <desc>Flugplatz</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.458057088" lon="7.571410346">
+  <ele>0.000000</ele>
+  <name>F98223</name>
+  <cmt>Sperrzone 1</cmt>
+  <desc>Sperrzone 1</desc>
+  <sym>Waypoint</sym>
+</wpt>
+<wpt lat="46.492571488" lon="7.508897981">
+  <ele>2000.000000</ele>
+  <name>F99200</name>
+  <cmt>Sperrzone 2 Furgi</cmt>
+  <desc>Sperrzone 2 Furgi</desc>
+  <sym>Waypoint</sym>
+</wpt>
+</gpx>
