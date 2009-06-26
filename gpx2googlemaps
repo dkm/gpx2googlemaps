@@ -35,7 +35,7 @@ except ImportError:
     from xml.etree.ElementTree import ElementTree, parse
 
 import cairo
-import globalmaptiles
+from gpx2gmaps import globalmaptiles
 
 
 PROJECTION = globalmaptiles.GlobalMercator()
