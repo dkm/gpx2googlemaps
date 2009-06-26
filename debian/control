@@ -2,8 +2,8 @@ Source: gpx2googlemaps
 Section: utils
 Priority: extra
 Maintainer: Marc Poulhiès <dkm@kataplop.net>
-Build-Depends: cdbs, debhelper (>= 7), python-cairo, imagemagick
-Standards-Version: 3.8.1
+Build-Depends: cdbs, debhelper (>= 7), python-cairo, imagemagick, python-support, python-all-dev
+Standards-Version: 3.8.2
 Homepage: http://github.com/twpayne/gpx2googlemaps
 
 Package: gpx2googlemaps
